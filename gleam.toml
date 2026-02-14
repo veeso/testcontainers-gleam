@@ -1,5 +1,5 @@
 name = "testcontainers_gleam"
-version = "1.0.1"
+version = "2.0.0"
 description = "Gleam TestContainers wrapper around Elixir TestContainers"
 licences = ["MIT"]
 repository = { type = "github", user = "darky", repo = "testcontainers-gleam" }
@@ -12,3 +12,4 @@ testcontainers = ">= 1.8.1"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"
+envoy = ">= 1.1.0 and < 2.0.0"
