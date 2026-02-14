@@ -5,6 +5,7 @@ import testcontainers_gleam
 import testcontainers_gleam/cassandra
 import testcontainers_gleam/ceph
 import testcontainers_gleam/container
+import testcontainers_gleam/kafka
 import testcontainers_gleam/mysql
 import testcontainers_gleam/postgres
 import testcontainers_gleam/redis
@@ -415,6 +416,22 @@ pub fn ceph_module_start_and_stop_test() {
     let url = ceph.connection_url(running)
     url |> string.is_empty() |> should.be_false()
 
+    testcontainers_gleam.stop_container(id) |> should.be_ok()
+  })
+}
+
+// --- kafka module ---
+
+pub fn kafka_module_start_and_stop_test() {
+  integration_test(fn() {
+    let config = kafka.new()
+    let built = kafka.build(config)
+    let running = testcontainers_gleam.start_container(built) |> should.be_ok()
+
+    // Must call after_start for Kafka
+    kafka.after_start(config, running) |> should.be_ok()
+
+    let id = container.container_id(running)
     testcontainers_gleam.stop_container(id) |> should.be_ok()
   })
 }

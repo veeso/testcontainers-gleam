@@ -2,6 +2,7 @@ import gleeunit
 import testcontainers_gleam/cassandra
 import testcontainers_gleam/ceph
 import testcontainers_gleam/container
+import testcontainers_gleam/kafka
 import testcontainers_gleam/mysql
 import testcontainers_gleam/postgres
 import testcontainers_gleam/redis
@@ -364,5 +365,30 @@ pub fn ceph_build_test() {
 
 pub fn ceph_defaults_test() {
   let _image = ceph.default_image()
+  Nil
+}
+
+// --- kafka ---
+
+pub fn kafka_new_test() {
+  let _config = kafka.new()
+  Nil
+}
+
+pub fn kafka_builders_test() {
+  let _config =
+    kafka.new()
+    |> kafka.with_image("confluentinc/cp-kafka:7.4.3")
+    |> kafka.with_kafka_port(9093)
+    |> kafka.with_broker_port(29_093)
+    |> kafka.with_broker_id(2)
+    |> kafka.with_wait_timeout(120_000)
+    |> kafka.with_topic_partitions(3)
+    |> kafka.with_reuse(True)
+  Nil
+}
+
+pub fn kafka_build_test() {
+  let _container = kafka.new() |> kafka.build()
   Nil
 }
