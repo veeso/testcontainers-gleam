@@ -55,10 +55,22 @@ pub type ContainerError {
 ///
 /// This is called automatically by `start_container`, so you only
 /// need to call it directly if you want to manage the lifecycle yourself.
+/// Returns `Ok(Nil)` if the GenServer was started or is already running.
 pub fn start_link() -> ContainerResult(Nil) {
-  testcontainers_ffi.start_link()
-  |> result.map_error(decode_error)
-  |> result.replace(Nil)
+  case testcontainers_ffi.start_link() {
+    Ok(_) -> Ok(Nil)
+    Error(raw) -> {
+      let tag_decoder = decode.at([0], atom.decoder())
+      case decode.run(raw, tag_decoder) {
+        Ok(tag) ->
+          case atom.to_string(tag) {
+            "already_started" -> Ok(Nil)
+            _ -> Error(decode_error(raw))
+          }
+        Error(_) -> Error(decode_error(raw))
+      }
+    }
+  }
 }
 
 /// Start a container and wait until it is ready.
@@ -126,6 +138,9 @@ fn decode_error(raw: Dynamic) -> ContainerError {
         "failed_to_create_container" -> FailedToCreateContainer
         "failed_to_start_container" -> FailedToStartContainer
         "failed_to_get_container" -> FailedToGetContainer
+        "log_wait_strategy" -> WaitStrategyFailed
+        "command_wait_strategy" -> WaitStrategyFailed
+        "port_wait_strategy" -> WaitStrategyFailed
         _ -> Unknown
       }
     Error(_) -> Unknown

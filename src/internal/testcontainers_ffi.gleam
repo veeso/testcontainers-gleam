@@ -12,9 +12,9 @@ pub fn start_link() -> Result(Dynamic, Dynamic)
 
 /// Start a container and wait until it is ready.
 ///
-/// Calls `Testcontainers.start_container/1` which returns
-/// `{:ok, %Container{}}` or `{:error, reason}`.
-@external(erlang, "Elixir.Testcontainers", "start_container")
+/// Uses an Erlang wrapper that normalizes 3-element error tuples
+/// from wait strategies into standard 2-element `{:error, reason}`.
+@external(erlang, "testcontainers_gleam_ffi", "start_container")
 pub fn start(container: Container) -> Result(Container, Dynamic)
 
 /// Stop a running container by ID.

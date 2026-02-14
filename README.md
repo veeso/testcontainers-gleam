@@ -106,9 +106,9 @@ Further documentation can be found at <https://hexdocs.pm/testcontainers_gleam>.
 ## Development
 
 ```sh
-gleam deps download  # Download dependencies
-gleam test           # Run the tests (requires Docker)
-gleam format src test  # Format code
+gleam deps download                             # Download dependencies
+TESTCONTAINERS_INTEGRATION_TESTS=1 gleam test   # Run the tests (requires Docker)
+gleam format src test                           # Format code
 ```
 
 ## License
