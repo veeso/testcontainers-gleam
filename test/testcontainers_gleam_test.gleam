@@ -2,9 +2,12 @@ import gleeunit
 import testcontainers_gleam/cassandra
 import testcontainers_gleam/ceph
 import testcontainers_gleam/container
+import testcontainers_gleam/emqx
 import testcontainers_gleam/kafka
+import testcontainers_gleam/minio
 import testcontainers_gleam/mysql
 import testcontainers_gleam/postgres
+import testcontainers_gleam/rabbitmq
 import testcontainers_gleam/redis
 import testcontainers_gleam/wait_strategy
 
@@ -390,5 +393,95 @@ pub fn kafka_builders_test() {
 
 pub fn kafka_build_test() {
   let _container = kafka.new() |> kafka.build()
+  Nil
+}
+
+// --- emqx ---
+
+pub fn emqx_new_test() {
+  let _config = emqx.new()
+  Nil
+}
+
+pub fn emqx_builders_test() {
+  let _config =
+    emqx.new()
+    |> emqx.with_image("emqx:5.7.0")
+    |> emqx.with_check_image("emqx")
+    |> emqx.with_reuse(True)
+  Nil
+}
+
+pub fn emqx_build_test() {
+  // Note: EMQX's ContainerBuilder.build/1 calls Testcontainers.get_host(),
+  // which requires the GenServer (and Docker) to be running.
+  // Full build is tested in the integration test instead.
+  // Here we just verify the config can be created and chained.
+  let _config = emqx.new() |> emqx.with_image("emqx:5.7.0")
+  Nil
+}
+
+pub fn emqx_defaults_test() {
+  let _image = emqx.default_image()
+  Nil
+}
+
+// --- minio ---
+
+pub fn minio_new_test() {
+  let _config = minio.new()
+  Nil
+}
+
+pub fn minio_builders_test() {
+  let _config =
+    minio.new()
+    |> minio.with_reuse(True)
+  Nil
+}
+
+pub fn minio_build_test() {
+  let _container = minio.new() |> minio.build()
+  Nil
+}
+
+pub fn minio_defaults_test() {
+  let _username = minio.get_username()
+  let _password = minio.get_password()
+  let _s3_port = minio.default_s3_port()
+  let _ui_port = minio.default_ui_port()
+  Nil
+}
+
+// --- rabbitmq ---
+
+pub fn rabbitmq_new_test() {
+  let _config = rabbitmq.new()
+  Nil
+}
+
+pub fn rabbitmq_builders_test() {
+  let _config =
+    rabbitmq.new()
+    |> rabbitmq.with_image("rabbitmq:3.12-alpine")
+    |> rabbitmq.with_port(5673)
+    |> rabbitmq.with_username("myuser")
+    |> rabbitmq.with_password("mypass")
+    |> rabbitmq.with_virtual_host("/myvhost")
+    |> rabbitmq.with_cmd(["rabbitmq-server"])
+    |> rabbitmq.with_wait_timeout(120_000)
+    |> rabbitmq.with_check_image("rabbitmq")
+    |> rabbitmq.with_reuse(True)
+  Nil
+}
+
+pub fn rabbitmq_build_test() {
+  let _container = rabbitmq.new() |> rabbitmq.build()
+  Nil
+}
+
+pub fn rabbitmq_defaults_test() {
+  let _image = rabbitmq.default_image()
+  let _port = rabbitmq.default_port()
   Nil
 }

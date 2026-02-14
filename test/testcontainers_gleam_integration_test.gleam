@@ -5,9 +5,12 @@ import testcontainers_gleam
 import testcontainers_gleam/cassandra
 import testcontainers_gleam/ceph
 import testcontainers_gleam/container
+import testcontainers_gleam/emqx
 import testcontainers_gleam/kafka
+import testcontainers_gleam/minio
 import testcontainers_gleam/mysql
 import testcontainers_gleam/postgres
+import testcontainers_gleam/rabbitmq
 import testcontainers_gleam/redis
 import testcontainers_gleam/wait_strategy
 
@@ -432,6 +435,63 @@ pub fn kafka_module_start_and_stop_test() {
     kafka.after_start(config, running) |> should.be_ok()
 
     let id = container.container_id(running)
+    testcontainers_gleam.stop_container(id) |> should.be_ok()
+  })
+}
+
+// --- emqx module ---
+
+pub fn emqx_module_start_and_stop_test() {
+  integration_test(fn() {
+    let config = emqx.new()
+    let built = emqx.build(config)
+
+    let running = testcontainers_gleam.start_container(built) |> should.be_ok()
+    let id = container.container_id(running)
+
+    let p = emqx.mqtt_port(running)
+    { p > 0 } |> should.be_true()
+
+    testcontainers_gleam.stop_container(id) |> should.be_ok()
+  })
+}
+
+// --- minio module ---
+
+pub fn minio_module_start_and_stop_test() {
+  integration_test(fn() {
+    let config = minio.new()
+    let built = minio.build(config)
+
+    let running = testcontainers_gleam.start_container(built) |> should.be_ok()
+    let id = container.container_id(running)
+
+    let p = minio.port(running)
+    { p > 0 } |> should.be_true()
+
+    let url = minio.connection_url(running)
+    url |> string.contains("http://") |> should.be_true()
+
+    testcontainers_gleam.stop_container(id) |> should.be_ok()
+  })
+}
+
+// --- rabbitmq module ---
+
+pub fn rabbitmq_module_start_and_stop_test() {
+  integration_test(fn() {
+    let config = rabbitmq.new()
+    let built = rabbitmq.build(config)
+
+    let running = testcontainers_gleam.start_container(built) |> should.be_ok()
+    let id = container.container_id(running)
+
+    let p = rabbitmq.port(running)
+    { p > 0 } |> should.be_true()
+
+    let url = rabbitmq.connection_url(running)
+    url |> string.contains("amqp://") |> should.be_true()
+
     testcontainers_gleam.stop_container(id) |> should.be_ok()
   })
 }
