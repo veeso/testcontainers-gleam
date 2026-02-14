@@ -24,3 +24,20 @@ pub fn start(container: Container) -> Result(Container, Dynamic)
 /// is a bare atom, not a `{:ok, value}` tuple.
 @external(erlang, "Elixir.Testcontainers", "stop_container")
 pub fn stop_container(container_id: String) -> Dynamic
+
+/// Build a Container from any ContainerBuilder config struct.
+///
+/// Dispatches through Elixir's `ContainerBuilder` protocol to convert
+/// a builder (e.g. `%RedisContainer{}`) into a low-level `%Container{}`.
+@external(erlang, "testcontainers_gleam_ffi", "build_container")
+pub fn build_container(builder: anything) -> Container
+
+/// Call after_start for builders that need post-start hooks (e.g. Kafka).
+///
+/// Extracts the Docker HTTP connection from the Testcontainers GenServer
+/// state and calls `ContainerBuilder.after_start/3`.
+@external(erlang, "testcontainers_gleam_ffi", "after_start")
+pub fn after_start(
+  builder: anything,
+  container: Container,
+) -> Result(Nil, Dynamic)
