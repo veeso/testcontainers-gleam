@@ -1,5 +1,6 @@
 import gleeunit
 import testcontainers_gleam/container
+import testcontainers_gleam/redis
 import testcontainers_gleam/wait_strategy
 
 pub fn main() {
@@ -191,5 +192,47 @@ pub fn full_builder_chain_test() {
     |> container.with_auto_remove(True)
     |> container.with_network_mode("bridge")
     |> container.with_pull_policy(container.AlwaysPull)
+  Nil
+}
+
+// --- redis ---
+
+pub fn redis_new_test() {
+  let _config = redis.new()
+  Nil
+}
+
+pub fn redis_with_image_test() {
+  let _config = redis.new() |> redis.with_image("redis:6-alpine")
+  Nil
+}
+
+pub fn redis_with_port_test() {
+  let _config = redis.new() |> redis.with_port(6380)
+  Nil
+}
+
+pub fn redis_with_wait_timeout_test() {
+  let _config = redis.new() |> redis.with_wait_timeout(30_000)
+  Nil
+}
+
+pub fn redis_with_check_image_test() {
+  let _config = redis.new() |> redis.with_check_image("redis")
+  Nil
+}
+
+pub fn redis_with_reuse_test() {
+  let _config = redis.new() |> redis.with_reuse(True)
+  Nil
+}
+
+pub fn redis_build_test() {
+  let _container = redis.new() |> redis.build()
+  Nil
+}
+
+pub fn redis_default_image_test() {
+  let _image = redis.default_image()
   Nil
 }
