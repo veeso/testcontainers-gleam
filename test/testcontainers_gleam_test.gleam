@@ -2,6 +2,7 @@ import testcontainers_gleam/cassandra
 import testcontainers_gleam/ceph
 import testcontainers_gleam/container
 import testcontainers_gleam/emqx
+import testcontainers_gleam/integration
 import testcontainers_gleam/kafka
 import testcontainers_gleam/minio
 import testcontainers_gleam/mysql
@@ -10,23 +11,9 @@ import testcontainers_gleam/rabbitmq
 import testcontainers_gleam/redis
 import testcontainers_gleam/wait_strategy
 
-/// Custom test runner that gives each module a 120-second per-test timeout.
-/// The default gleeunit runner only sets a group-level timeout, which leaves
-/// individual tests at the eunit default of 5 seconds — too short for
-/// containers like Cassandra or Ceph.
-@external(erlang, "testcontainers_test_ffi", "run")
-fn run_tests() -> Result(Nil, a)
-
 pub fn main() {
-  let code = case run_tests() {
-    Ok(_) -> 0
-    Error(_) -> 1
-  }
-  halt(code)
+  integration.main()
 }
-
-@external(erlang, "erlang", "halt")
-fn halt(code: Int) -> Nil
 
 // --- container.new ---
 

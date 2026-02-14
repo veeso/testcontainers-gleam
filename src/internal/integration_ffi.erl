@@ -1,5 +1,5 @@
--module(testcontainers_test_ffi).
--export([run/0]).
+-module(integration_ffi).
+-export([run/1]).
 
 %% Custom test runner that wraps each test function with an individual timeout.
 %%
@@ -8,13 +8,12 @@
 %% per-test timeout.  By discovering every _test/0 function and wrapping
 %% each one in `{timeout, T, {M, F}}` we ensure slow containers like
 %% Cassandra or Ceph get enough time.
-run() ->
+run(Timeout) ->
     Files   = filelib:wildcard("**/*.{erl,gleam}", "test"),
     Modules = lists:map(fun(F) ->
         Name = gleam_module_name(list_to_binary(F)),
         binary_to_atom(Name, utf8)
     end, Files),
-    Timeout = 600,
     Tests   = lists:flatmap(fun(M) -> test_funs(M, Timeout) end, Modules),
     Options = [verbose, no_tty,
                {report, {gleeunit_progress, [{colored, true}]}}],

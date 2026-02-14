@@ -11,6 +11,8 @@ Gleam wrapper around [Elixir TestContainers](https://github.com/testcontainers/t
 gleam add --dev testcontainers_gleam
 ```
 
+Mind that **elixir** is required to use this library, as it wraps an Elixir dependency. You can install Elixir from [the official website](https://elixir-lang.org/install.html).
+
 ## Quick start
 
 ```gleam
@@ -102,6 +104,54 @@ All strategies take `timeout` (max wait in ms) and `retry_delay` (polling interv
 - Erlang/OTP and Elixir (this library wraps an Elixir dependency)
 
 Further documentation can be found at <https://hexdocs.pm/testcontainers_gleam>.
+
+## Running integration tests
+
+testcontainers-gleam provides a test runner and guard function for integration tests
+that start Docker containers.
+
+### Test runner
+
+Replace `gleeunit.main()` with `integration.main()` in your test entry point.
+This gives each test a 600-second timeout instead of gleeunit's default 5 seconds,
+which is too short for container startup. It also automatically disables the Ryuk
+sidecar container, which fails in most CI environments:
+
+```gleam
+// test/my_project_test.gleam
+import testcontainers_gleam/integration
+
+pub fn main() {
+  integration.main()
+}
+```
+
+### Gating integration tests
+
+Use `integration.guard()` to skip individual tests when the
+`TESTCONTAINERS_INTEGRATION_TESTS` environment variable is not set:
+
+```gleam
+pub fn redis_test() {
+  use <- integration.guard()
+  let assert Ok(running) = testcontainers_gleam.start_container(container)
+  // ...
+}
+```
+
+### CI configuration
+
+Add these to your CI workflow:
+
+```yaml
+- run: sudo apt-get update && sudo apt-get install -y inotify-tools
+- run: gleam test
+  env:
+    TESTCONTAINERS_INTEGRATION_TESTS: 1
+```
+
+- `inotify-tools` is required on Linux for the filesystem watcher dependency
+- Ryuk is automatically disabled by the test runner
 
 ## Development
 
