@@ -1,5 +1,9 @@
 import gleeunit
+import testcontainers_gleam/cassandra
+import testcontainers_gleam/ceph
 import testcontainers_gleam/container
+import testcontainers_gleam/mysql
+import testcontainers_gleam/postgres
 import testcontainers_gleam/redis
 import testcontainers_gleam/wait_strategy
 
@@ -234,5 +238,131 @@ pub fn redis_build_test() {
 
 pub fn redis_default_image_test() {
   let _image = redis.default_image()
+  Nil
+}
+
+// --- postgres ---
+
+pub fn postgres_new_test() {
+  let _config = postgres.new()
+  Nil
+}
+
+pub fn postgres_builders_test() {
+  let _config =
+    postgres.new()
+    |> postgres.with_image("postgres:16-alpine")
+    |> postgres.with_user("myuser")
+    |> postgres.with_password("mypass")
+    |> postgres.with_database("mydb")
+    |> postgres.with_port(5433)
+    |> postgres.with_persistent_volume("/tmp/pgdata")
+    |> postgres.with_wait_timeout(120_000)
+    |> postgres.with_check_image("postgres")
+    |> postgres.with_reuse(True)
+  Nil
+}
+
+pub fn postgres_build_test() {
+  let _container = postgres.new() |> postgres.build()
+  Nil
+}
+
+pub fn postgres_defaults_test() {
+  let _image = postgres.default_image()
+  let _port = postgres.default_port()
+  Nil
+}
+
+// --- mysql ---
+
+pub fn mysql_new_test() {
+  let _config = mysql.new()
+  Nil
+}
+
+pub fn mysql_builders_test() {
+  let _config =
+    mysql.new()
+    |> mysql.with_image("mysql:8.0")
+    |> mysql.with_user("myuser")
+    |> mysql.with_password("mypass")
+    |> mysql.with_database("mydb")
+    |> mysql.with_port(3307)
+    |> mysql.with_persistent_volume("/tmp/mysqldata")
+    |> mysql.with_wait_timeout(240_000)
+    |> mysql.with_check_image("mysql")
+    |> mysql.with_reuse(True)
+  Nil
+}
+
+pub fn mysql_build_test() {
+  let _container = mysql.new() |> mysql.build()
+  Nil
+}
+
+pub fn mysql_defaults_test() {
+  let _image = mysql.default_image()
+  let _port = mysql.default_port()
+  Nil
+}
+
+// --- cassandra ---
+
+pub fn cassandra_new_test() {
+  let _config = cassandra.new()
+  Nil
+}
+
+pub fn cassandra_builders_test() {
+  let _config =
+    cassandra.new()
+    |> cassandra.with_image("cassandra:4.0")
+    |> cassandra.with_check_image("cassandra")
+    |> cassandra.with_reuse(True)
+  Nil
+}
+
+pub fn cassandra_build_test() {
+  let _container = cassandra.new() |> cassandra.build()
+  Nil
+}
+
+pub fn cassandra_defaults_test() {
+  let _image = cassandra.default_image()
+  let _port = cassandra.default_port()
+  let _username = cassandra.get_username()
+  let _password = cassandra.get_password()
+  Nil
+}
+
+// --- ceph ---
+
+pub fn ceph_new_test() {
+  let _config = ceph.new()
+  Nil
+}
+
+pub fn ceph_builders_test() {
+  let _config =
+    ceph.new()
+    |> ceph.with_image("quay.io/ceph/demo:latest")
+    |> ceph.with_access_key("myaccesskey")
+    |> ceph.with_secret_key("mysecretkey")
+    |> ceph.with_bucket("mybucket")
+    |> ceph.with_port(8081)
+    |> ceph.with_wait_timeout(600_000)
+    |> ceph.with_check_image("ceph")
+    |> ceph.with_reuse(True)
+  Nil
+}
+
+pub fn ceph_build_test() {
+  let _container = ceph.new() |> ceph.build()
+  Nil
+}
+
+pub fn ceph_defaults_test() {
+  let _image = ceph.default_image()
   Nil
 }
