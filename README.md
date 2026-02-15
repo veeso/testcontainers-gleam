@@ -105,7 +105,19 @@ All strategies take `timeout` (max wait in ms) and `retry_delay` (polling interv
 
 Further documentation can be found at <https://hexdocs.pm/testcontainers_gleam>.
 
-## Running integration tests
+## Troubleshooting integration tests on CI
+
+This doesn't seem to be always necessary, but in case you are experiencing issues such as:
+
+```txt
+An unexpected error occurred:
+  [Id([1]), Reason(Undefined), Desc(Undefined), Spawn(Undefined), Order(Undefined)]
+gleeunit.main
+An unexpected error occurred:
+  [Id([]), Reason(Blame([1, 1])), Desc(Undefined), Spawn(Undefined), Order(Undefined)]
+```
+
+it may required to run the tests as follows.
 
 testcontainers-gleam provides a test runner and guard function for integration tests
 that start Docker containers.
@@ -144,7 +156,6 @@ pub fn redis_test() {
 Add these to your CI workflow:
 
 ```yaml
-- run: sudo apt-get update && sudo apt-get install -y inotify-tools
 - run: gleam test
   env:
     TESTCONTAINERS_INTEGRATION_TESTS: 1
@@ -157,7 +168,7 @@ Add these to your CI workflow:
 
 ```sh
 gleam deps download                                                            # Download dependencies
-TESTCONTAINERS_RYUK_DISABLED=1 TESTCONTAINERS_INTEGRATION_TESTS=1 gleam test   # Run the tests (requires Docker)
+TESTCONTAINERS_INTEGRATION_TESTS=1 gleam test   # Run the tests (requires Docker)
 gleam format src test                                                          # Format code
 ```
 
