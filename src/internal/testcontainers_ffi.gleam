@@ -1,0 +1,43 @@
+//// FFI to Elixir.Testcontainers top-level module functions.
+
+import gleam/dynamic.{type Dynamic}
+import testcontainers_gleam/container.{type Container}
+
+/// Start the Testcontainers GenServer.
+///
+/// Calls `Testcontainers.start_link/0` which returns
+/// `{:ok, pid}` or `{:error, reason}`.
+@external(erlang, "Elixir.Testcontainers", "start_link")
+pub fn start_link() -> Result(Dynamic, Dynamic)
+
+/// Start a container and wait until it is ready.
+///
+/// Uses an Erlang wrapper that normalizes 3-element error tuples
+/// from wait strategies into standard 2-element `{:error, reason}`.
+@external(erlang, "testcontainers_gleam_ffi", "start_container")
+pub fn start(container: Container) -> Result(Container, Dynamic)
+
+/// Stop a running container by ID.
+///
+/// Calls `Testcontainers.stop_container/1` which returns
+/// `:ok` or `{:error, reason}`. Typed as Dynamic because `:ok`
+/// is a bare atom, not a `{:ok, value}` tuple.
+@external(erlang, "Elixir.Testcontainers", "stop_container")
+pub fn stop_container(container_id: String) -> Dynamic
+
+/// Build a Container from any ContainerBuilder config struct.
+///
+/// Dispatches through Elixir's `ContainerBuilder` protocol to convert
+/// a builder (e.g. `%RedisContainer{}`) into a low-level `%Container{}`.
+@external(erlang, "testcontainers_gleam_ffi", "build_container")
+pub fn build_container(builder: anything) -> Container
+
+/// Call after_start for builders that need post-start hooks (e.g. Kafka).
+///
+/// Extracts the Docker HTTP connection from the Testcontainers GenServer
+/// state and calls `ContainerBuilder.after_start/3`.
+@external(erlang, "testcontainers_gleam_ffi", "after_start")
+pub fn after_start(
+  builder: anything,
+  container: Container,
+) -> Result(Nil, Dynamic)

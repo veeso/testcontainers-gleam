@@ -3,36 +3,173 @@
 [![Package Version](https://img.shields.io/hexpm/v/testcontainers_gleam)](https://hex.pm/packages/testcontainers_gleam)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/testcontainers_gleam/)
 
-Gleam TestContainers wrapper around [Elixir TestContainers](https://github.com/testcontainers/testcontainers-elixir)
+Gleam wrapper around [Elixir TestContainers](https://github.com/testcontainers/testcontainers-elixir) for managing Docker containers in tests.
+
+## Installation
 
 ```sh
 gleam add --dev testcontainers_gleam
 ```
 
+Mind that **elixir** is required to use this library, as it wraps an Elixir dependency. You can install Elixir from [the official website](https://elixir-lang.org/install.html).
+
+## Quick start
+
 ```gleam
-import testcontainers_gleam.{Config}
+import testcontainers_gleam
+import testcontainers_gleam/container
 
-pub fn main() {
-  let start_info =
-    testcontainers_gleam.start_container(Config(
-      "redis:7.4-rc1-alpine3.20",
-      6379,
-    ))
+pub fn demo_test() {
+  // Build a container definition
+  let c =
+    container.new("redis:7.4-alpine")
+    |> container.with_exposed_port(6379)
+    |> container.with_environment("REDIS_PASSWORD", "secret")
 
-  // start_info.port contains host port
+  // Start the container (GenServer is started automatically)
+  let assert Ok(running) = testcontainers_gleam.start_container(c)
 
-  testcontainers_gleam.stop_container(start_info.container_id)
+  // Query the running container
+  let id = container.container_id(running)
+  let assert Ok(host_port) = container.mapped_port(running, 6379)
+
+  // ... use host_port to connect to Redis ...
+
+  // Stop the container
+  let assert Ok(Nil) = testcontainers_gleam.stop_container(id)
 }
 ```
 
+## Container configuration
+
+The `container` module exposes a builder API for configuring containers:
+
+```gleam
+import testcontainers_gleam/container
+import testcontainers_gleam/wait_strategy
+
+container.new("postgres:16-alpine")
+|> container.with_exposed_port(5432)
+|> container.with_environment("POSTGRES_PASSWORD", "test")
+|> container.with_cmd(["postgres", "-c", "log_statement=all"])
+|> container.with_label("project", "my_app")
+|> container.with_waiting_strategy(
+  wait_strategy.log("database system is ready to accept connections", 30_000, 1000),
+)
+|> container.with_auto_remove(True)
+```
+
+### Available builder functions
+
+| Function | Description |
+| --- | --- |
+| `with_exposed_port` | Expose a single port (mapped to a random host port) |
+| `with_exposed_ports` | Expose multiple ports at once |
+| `with_fixed_port` | Bind a container port to a specific host port |
+| `with_environment` | Set an environment variable |
+| `with_cmd` | Set the container command |
+| `with_bind_mount` | Mount a host path into the container |
+| `with_bind_volume` | Mount a named Docker volume |
+| `with_label` | Add a container label |
+| `with_waiting_strategy` | Add a readiness wait strategy |
+| `with_auto_remove` | Auto-remove the container on exit |
+| `with_reuse` | Reuse containers across test runs |
+| `with_network_mode` | Set the network mode (`"bridge"`, `"host"`, etc.) |
+| `with_auth` | Set registry credentials for private images |
+| `with_check_image` | Set an image name validation pattern |
+| `with_pull_policy` | Set the pull policy (`AlwaysPull` or `NeverPull`) |
+
+## Wait strategies
+
+Wait strategies control how testcontainers detects that a container is ready:
+
+```gleam
+import testcontainers_gleam/wait_strategy
+
+// Wait for a TCP port to accept connections
+wait_strategy.port("0.0.0.0", 5432, 5000, 500)
+
+// Wait for a log line matching a regex pattern
+wait_strategy.log("Ready to accept connections", 10_000, 1000)
+
+// Wait for a command to exit with status 0
+wait_strategy.command(["pg_isready"], 10_000, 1000)
+```
+
+All strategies take `timeout` (max wait in ms) and `retry_delay` (polling interval in ms) parameters.
+
+## Requirements
+
+- Docker must be running
+- Erlang/OTP and Elixir (this library wraps an Elixir dependency)
+
 Further documentation can be found at <https://hexdocs.pm/testcontainers_gleam>.
+
+## Troubleshooting integration tests on CI
+
+This doesn't seem to be always necessary, but in case you are experiencing issues such as:
+
+```txt
+An unexpected error occurred:
+  [Id([1]), Reason(Undefined), Desc(Undefined), Spawn(Undefined), Order(Undefined)]
+gleeunit.main
+An unexpected error occurred:
+  [Id([]), Reason(Blame([1, 1])), Desc(Undefined), Spawn(Undefined), Order(Undefined)]
+```
+
+it may required to run the tests as follows.
+
+testcontainers-gleam provides a test runner and guard function for integration tests
+that start Docker containers.
+
+### Test runner
+
+Replace `gleeunit.main()` with `integration.main()` in your test entry point.
+This gives each test a 600-second timeout instead of gleeunit's default 5 seconds,
+which is too short for container startup. It also automatically disables the Ryuk
+sidecar container, which fails in most CI environments:
+
+```gleam
+// test/my_project_test.gleam
+import testcontainers_gleam/integration
+
+pub fn main() {
+  integration.main()
+}
+```
+
+### Gating integration tests
+
+Use `integration.guard()` to skip individual tests when the
+`TESTCONTAINERS_INTEGRATION_TESTS` environment variable is not set:
+
+```gleam
+pub fn redis_test() {
+  use <- integration.guard()
+  let assert Ok(running) = testcontainers_gleam.start_container(container)
+  // ...
+}
+```
+
+### CI configuration
+
+Add these to your CI workflow:
+
+```yaml
+- run: gleam test
+  env:
+    TESTCONTAINERS_INTEGRATION_TESTS: 1
+```
+
+- `inotify-tools` is required on Linux for the filesystem watcher dependency
+- Ryuk is automatically disabled by the test runner
 
 ## Development
 
 ```sh
-gleam run   # Run the project
-gleam test  # Run the tests
-gleam shell # Run an Erlang shell
+gleam deps download                                                            # Download dependencies
+TESTCONTAINERS_INTEGRATION_TESTS=1 gleam test   # Run the tests (requires Docker)
+gleam format src test                                                          # Format code
 ```
 
 ## License
